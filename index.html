@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>열방교회 라이프클래스 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy: #1B3A6B; --blue: #2E5FA3; --light-blue: #D6E4F7;
+  --gold: #C9A84C; --light-gold: #FFF3CD;
+  --green: #27AE60; --light-green: #D5F5E3;
+  --brown: #7B3F00; --light-brown: #FAD7A0;
+  --danger: #C0392B; --light-danger: #FDECEA;
+  --font: 'Noto Sans KR', sans-serif;
+}
+body { font-family: var(--font); background: #f0f4fa; min-height: 100vh; }
+.app { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100vh; background: #f0f4fa; }
+
+/* 연결 상태 */
+.conn-bar { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; font-size: 13px; font-weight: 700; transition: all 0.3s; }
+.conn-bar.online { background: #D5F5E3; color: #1A5E2A; }
+.conn-bar.offline { background: var(--light-danger); color: var(--danger); }
+.conn-dot { width: 7px; height: 7px; border-radius: 50%; }
+.conn-bar.online .conn-dot { background: var(--green); }
+.conn-bar.offline .conn-dot { background: var(--danger); }
+
+/* 로딩 */
+.loading-screen { position: fixed; inset: 0; background: var(--navy); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; color: white; gap: 16px; }
+.loading-screen h2 { font-size: 22px; font-weight: 700; }
+.loading-screen p { font-size: 15px; opacity: 0.7; }
+.spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.2); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.topbar { background: var(--navy); color: white; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.topbar-title { font-size: 18px; font-weight: 700; }
+.topbar-sub { font-size: 13px; opacity: 0.7; margin-top: 2px; }
+.tabbar { display: flex; background: white; border-bottom: 1px solid #e0e0e0; overflow-x: auto; scrollbar-width: none; position: sticky; top: 68px; z-index: 99; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.tabbar::-webkit-scrollbar { display: none; }
+.tab-btn { flex: none; padding: 13px 16px; font-size: 14px; font-weight: 500; font-family: var(--font); border: none; background: none; cursor: pointer; white-space: nowrap; color: #666; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); font-weight: 700; }
+.tab-btn:hover { background: #f5f5f5; }
+.content { padding: 16px; flex: 1; }
+.card { background: white; border-radius: 14px; border: 1px solid #e8e8e8; padding: 20px; margin-bottom: 14px; }
+.card-title { font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 12px; }
+.dash-header { background: linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%); border-radius: 12px; padding: 24px 20px; color: white; margin-bottom: 12px; text-align: center; }
+.dash-header h1 { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+.dash-header p { font-size: 14px; opacity: 0.8; }
+.stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+.stat-card { border-radius: 10px; padding: 14px; text-align: center; cursor: pointer; transition: transform 0.15s; }
+.stat-card:hover { transform: scale(1.02); }
+.stat-label { font-size: 14px; font-weight: 500; opacity: 0.8; margin-bottom: 4px; }
+.stat-num { font-size: 38px; font-weight: 700; }
+.flow-steps { display: flex; align-items: center; overflow-x: auto; gap: 4px; padding: 4px 0 8px; scrollbar-width: none; }
+.flow-steps::-webkit-scrollbar { display: none; }
+.flow-step { flex: none; border-radius: 8px; padding: 9px 14px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.flow-arrow { font-size: 14px; color: #999; flex: none; }
+.schedule-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+.schedule-item:last-child { border-bottom: none; }
+.sched-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.sched-date { font-size: 13px; color: #888; width: 100px; flex: none; }
+.sched-content { flex: 1; }
+.sched-title { font-size: 15px; font-weight: 500; }
+.sched-cat { font-size: 13px; color: #999; }
+.form-header { border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+.form-header h2 { font-size: 20px; font-weight: 700; color: white; margin-bottom: 3px; }
+.form-header p { font-size: 14px; color: rgba(255,255,255,0.85); }
+.cost-badge { background: var(--light-danger); border: 1px solid #f5c6c2; border-radius: 10px; padding: 12px 16px; font-size: 14px; font-weight: 500; color: var(--danger); margin-bottom: 16px; line-height: 1.6; }
+.free-badge { background: var(--light-green); border: 1px solid #a8e6c0; border-radius: 10px; padding: 12px 16px; font-size: 14px; font-weight: 500; color: #1A5E2A; margin-bottom: 16px; }
+.form-group { margin-bottom: 14px; }
+.form-label { display: block; font-size: 15px; font-weight: 700; color: #444; margin-bottom: 6px; }
+.form-label span { color: var(--danger); margin-left: 2px; }
+.form-input, .form-select { width: 100%; padding: 12px 14px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 17px; font-family: var(--font); background: white; color: #222; transition: border-color 0.2s; -webkit-appearance: none; appearance: none; }
+.form-input:focus, .form-select:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(27,58,107,0.1); }
+.gender-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.gender-btn { padding: 14px; border: 1.5px solid #ddd; border-radius: 10px; background: white; font-size: 16px; font-weight: 500; font-family: var(--font); cursor: pointer; transition: all 0.2s; color: #555; }
+.gender-btn.sel-navy { border-color: var(--navy); background: var(--light-blue); color: var(--navy); font-weight: 700; }
+.gender-btn.sel-gold { border-color: var(--gold); background: var(--light-gold); color: #7D6608; font-weight: 700; }
+.gender-btn.sel-green { border-color: var(--green); background: var(--light-green); color: #1A5E2A; font-weight: 700; }
+.submit-btn { width: 100%; padding: 17px; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; font-family: var(--font); cursor: pointer; margin-top: 8px; transition: opacity 0.2s, transform 0.1s; }
+.submit-btn:active { transform: scale(0.98); }
+.submit-btn:hover { opacity: 0.88; }
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.att-session-list { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 14px; padding-bottom: 4px; scrollbar-width: none; }
+.att-session-list::-webkit-scrollbar { display: none; }
+.sess-chip { flex: none; padding: 9px 18px; border-radius: 22px; border: 1.5px solid #ddd; font-size: 14px; font-weight: 500; font-family: var(--font); cursor: pointer; background: white; color: #555; white-space: nowrap; transition: all 0.2s; }
+.sess-chip.chip-navy { border-color: var(--navy); background: var(--navy); color: white; }
+.sess-chip.chip-gold { border-color: var(--gold); background: var(--gold); color: white; }
+.sess-chip.chip-green { border-color: var(--green); background: var(--green); color: white; }
+.att-person { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; gap: 12px; }
+.att-person:last-child { border-bottom: none; }
+.att-avatar { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; flex: none; }
+.att-info { flex: 1; min-width: 0; }
+.att-name { font-size: 17px; font-weight: 700; }
+.att-meta { font-size: 13px; color: #888; margin-top: 3px; }
+.att-check { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #ddd; background: white; font-size: 22px; cursor: pointer; flex: none; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.att-check.chk-navy { border-color: var(--navy); background: var(--navy); color: white; }
+.att-check.chk-gold { border-color: var(--gold); background: var(--gold); color: white; }
+.att-check.chk-green { border-color: var(--green); background: var(--green); color: white; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: 700; }
+.badge-adult { background: var(--light-blue); color: var(--navy); }
+.badge-youth { background: #FFF3CD; color: #7D6608; }
+.badge-done { background: var(--light-green); color: #1A5E2A; }
+.badge-no { background: #f0f0f0; color: #999; }
+.badge-fee-ok { background: #D5F5E3; color: #1A5E2A; }
+.badge-fee-no { background: #FDECEA; color: #C0392B; }
+.empty-state { text-align: center; padding: 40px 20px; color: #bbb; }
+.empty-icon { font-size: 40px; margin-bottom: 10px; }
+.section-label { font-size: 13px; font-weight: 700; letter-spacing: 0.5px; color: #aaa; text-transform: uppercase; margin: 20px 0 8px; }
+.summary-row { display: flex; justify-content: space-between; align-items: center; font-size: 15px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+.summary-row:last-child { border-bottom: none; }
+.summary-key { color: #666; }
+.summary-val { font-weight: 700; }
+.del-btn { background: none; border: none; color: #ddd; font-size: 22px; cursor: pointer; padding: 4px 6px; border-radius: 6px; transition: color 0.2s; }
+.del-btn:hover { color: #e74c3c; }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: #222; color: white; padding: 13px 24px; border-radius: 26px; font-size: 15px; font-family: var(--font); z-index: 9999; transition: transform 0.3s ease; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
+.toast.show { transform: translateX(-50%) translateY(0); }
+.search-input { width: 100%; padding: 13px 16px; border: 1.5px solid #ddd; border-radius: 10px; font-size: 16px; font-family: var(--font); margin-bottom: 12px; }
+.search-input:focus { outline: none; border-color: var(--navy); }
+.count-chip { display: inline-block; background: var(--navy); color: white; border-radius: 10px; padding: 3px 10px; font-size: 13px; font-weight: 700; margin-left: 6px; }
+.saving-indicator { font-size: 11px; color: #aaa; text-align: center; padding: 4px; }
+@media (min-width: 600px) {
+  .stat-grid { grid-template-columns: repeat(4, 1fr); }
+  .gender-group { grid-template-columns: repeat(4, 1fr); }
+  .content { padding: 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 로딩 화면 -->
+<div class="loading-screen" id="loading-screen">
+  <div class="spinner"></div>
+  <h2>✝ 열방교회 라이프클래스</h2>
+  <p>데이터베이스 연결 중...</p>
+</div>
+
+<div class="app" id="main-app" style="display:none;">
+  <!-- 연결 상태 표시 -->
+  <div class="conn-bar online" id="conn-bar">
+    <div class="conn-dot"></div>
+    <span id="conn-text">Firebase 실시간 연결됨</span>
+  </div>
+
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">✝ 열방교회 라이프클래스</div>
+      <div class="topbar-sub">2026 교육과정 온라인 관리 시스템</div>
+    </div>
+    <div style="font-size:11px;opacity:0.7;text-align:right;font-weight:700;">2026<br>Season</div>
+  </div>
+
+  <div class="tabbar">
+    <button class="tab-btn active" onclick="showTab('dashboard',this)">📊 대시보드</button>
+    <button class="tab-btn" onclick="showTab('lc1-form',this)">🎓 LC1 신청</button>
+    <button class="tab-btn" onclick="showTab('lc1-att',this)">📋 LC1 출석</button>
+    <button class="tab-btn" onclick="showTab('enc-form',this)">⛺ 엔카운터 신청</button>
+    <button class="tab-btn" onclick="showTab('enc-att',this)">📋 엔카운터 출석</button>
+    <button class="tab-btn" onclick="showTab('lc2-form',this)">🌱 LC2 신청</button>
+    <button class="tab-btn" onclick="showTab('lc2-att',this)">📋 LC2 출석</button>
+    <button class="tab-btn" onclick="showTab('bap-form',this)">✝️ 세례 신청</button>
+  </div>
+
+  <div class="content">
+
+    <!-- 대시보드 -->
+    <div id="tab-dashboard">
+      <div class="dash-header">
+        <h1>🙏 라이프클래스 2026</h1>
+        <p>열방교회 교육과정 통합 관리 · 실시간 Firebase 연동</p>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card" style="background:var(--light-blue);color:var(--navy);" onclick="showTab('lc1-form',document.querySelectorAll('.tab-btn')[1])">
+          <div class="stat-label">LC1 신청</div><div class="stat-num" id="stat-lc1">-</div>
+        </div>
+        <div class="stat-card" style="background:var(--light-gold);color:#7D6608;" onclick="showTab('enc-form',document.querySelectorAll('.tab-btn')[3])">
+          <div class="stat-label">엔카운터</div><div class="stat-num" id="stat-enc">-</div>
+        </div>
+        <div class="stat-card" style="background:var(--light-green);color:#1A5E2A;" onclick="showTab('lc2-form',document.querySelectorAll('.tab-btn')[5])">
+          <div class="stat-label">LC2 신청</div><div class="stat-num" id="stat-lc2">-</div>
+        </div>
+        <div class="stat-card" style="background:var(--light-brown);color:var(--brown);" onclick="showTab('bap-form',document.querySelectorAll('.tab-btn')[7])">
+          <div class="stat-label">세례 신청</div><div class="stat-num" id="stat-bap">-</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🔄 참가 흐름</div>
+        <div class="flow-steps">
+          <div class="flow-step" style="background:var(--light-blue);color:var(--navy);">LC1 신청</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" style="background:var(--light-blue);color:var(--navy);">LC1 수료</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" style="background:var(--light-gold);color:#7D6608;">엔카운터</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" style="background:var(--light-green);color:#1A5E2A;">LC2</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" style="background:var(--light-brown);color:var(--brown);">세례식</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📅 전체 일정</div>
+        <div id="schedule-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">💰 등록비 안내</div>
+        <div class="summary-row"><span class="summary-key">🎓 라이프클래스 1 — 성인</span><span class="summary-val" style="color:var(--navy);">15,000원</span></div>
+        <div class="summary-row"><span class="summary-key">🎓 라이프클래스 1 — 유스</span><span class="summary-val" style="color:var(--navy);">10,000원</span></div>
+        <div class="summary-row"><span class="summary-key" style="font-size:11px;color:#bbb;">+ 교재비 (별도)</span><span class="summary-val" style="color:#bbb;font-size:12px;">15,000원</span></div>
+        <div class="summary-row"><span class="summary-key">⛺ 엔카운터</span><span class="summary-val" style="color:var(--gold);">별도 안내</span></div>
+        <div class="summary-row"><span class="summary-key">🌱 라이프클래스 2</span><span class="summary-val" style="color:var(--green);">무료</span></div>
+        <div class="summary-row"><span class="summary-key">✝️ 세례식</span><span class="summary-val" style="color:var(--brown);">무료</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📥 데이터 내보내기</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button onclick="exportCSV()" style="padding:10px 16px;border:1.5px solid #ddd;border-radius:8px;background:white;font-size:13px;font-family:var(--font);cursor:pointer;font-weight:500;">📊 전체 명단 CSV</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LC1 신청서 -->
+    <div id="tab-lc1-form" style="display:none;">
+      <div class="form-header" style="background:linear-gradient(135deg,var(--navy),var(--blue));">
+        <h2>🎓 라이프클래스 1 참가신청서</h2>
+        <p>2026.5.16 ~ 6.6 | 매주 토요일</p>
+      </div>
+      <div class="cost-badge">💰 등록비: 성인 15,000원 / 유스 10,000원<br>📚 교재비: 15,000원 별도</div>
+      <div id="lc1-form-fields"></div>
+      <button class="submit-btn" style="background:var(--navy);color:white;" id="lc1-submit" onclick="submitForm('lc1')">신청서 제출하기</button>
+      <div class="section-label" style="margin-top:24px;">📝 제출된 신청자 목록 <span class="count-chip" id="lc1-count">0</span></div>
+      <input class="search-input" placeholder="🔍 이름 또는 네트로 검색..." oninput="renderList('lc1',this.value)"/>
+      <div id="lc1-list"></div>
+    </div>
+
+    <!-- LC1 출석부 -->
+    <div id="tab-lc1-att" style="display:none;">
+      <div class="form-header" style="background:linear-gradient(135deg,var(--navy),var(--blue));">
+        <h2>📋 라이프클래스 1 출석부</h2>
+        <p>회차를 선택한 후 출석을 체크하세요</p>
+      </div>
+      <div class="att-session-list" id="lc1-sessions"></div>
+      <input class="search-input" placeholder="🔍 이름 검색..." oninput="renderAttendance('lc1',this.value)"/>
+      <div id="lc1-att-list"></div>
+    </div>
+
+    <!-- 엔카운터 신청서 -->
+    <div id="tab-enc-form" style="display:none;">
+      <div class="form-header" style="background:linear-gradient(135deg,#a07830,var(--gold));">
+        <h2>⛺ 엔카운터 참가신청서</h2>
+        <p>2026.6.19(금) ~ 6.21(일) | 2박 3일</p>
+      </div>
+      <div class="cost-badge">💰 등록비: 별도 안내 예정<br>✅ 라이프클래스 1 수료자만 신청 가능</div>
+      <div id="enc-form-fields"></div>
+      <button class="submit-btn" style="background:var(--gold);color:white;" id="enc-submit" onclick="submitForm('enc')">신청서 제출하기</button>
+      <div class="section-label" style="margin-top:24px;">📝 제출된 신청자 목록 <span class="count-chip" id="enc-count">0</span></div>
+      <input class="search-input" placeholder="🔍 이름 또는 네트로 검색..." oninput="renderList('enc',this.value)"/>
+      <div id="enc-list"></div>
+    </div>
+
+    <!-- 엔카운터 출석부 -->
+    <div id="tab-enc-att" style="display:none;">
+      <div class="form-header" style="background:linear-gradient(135deg,#a07830,var(--gold));">
+        <h2>📋 엔카운터 출석부</h2>
+        <p>회차를 선택한 후 출석을 체크하세요</p>
+      </div>
+      <div class="att-session-list" id="enc-sessions"></div>
+      <input class="search-input" placeholder="🔍 이름 검색..." oninput="renderAttendance('enc',this.value)"/>
+      <div id="enc-att-list"></div>
+    </div>
+
+    <!-- LC2 신청서 -->
+    <div id="tab-lc2-form" style="display:none;">
+      <div class="form-header" style="background:linear-gradient(135deg,#1A5E2A,var(--green));">
+        <h2>🌱 라이프클래스 2 참가신청서</h2>
+        <p>2026.6.20 ~ 6.27 | 엔카운터 수료자만 신청 가능</p>
+      </div>
+      <div class="free-badge">✅ 등록비 없음 (무료)</div>
+      <div id="lc2-form-fields"></div>
+      <button class="submit-btn" style="background:var(--green);color:white;" id="lc2-submit" onclick="submitForm('lc2')">신청서 제출하기</button>
+      <div class="section-label" style="margin-top:24px;">📝 제출된 신청자 목록 <span class="count-chip" id="lc2-count">0</span></div>
+      <input class="search-input" placeholder="🔍 이름 또는 네트로 검색..." oninput="renderList('lc2',this.value)"/>
+      <div id="lc2-list"></div>
+    </div>
+
+    <!-- LC2 출석부 -->
+    <div id="tab-lc2-att" style="display:none;">
+      <div class="form-header" style="background:linear-gradient(135deg,#1A5E2A,var(--green));">
+        <h2>📋 라이프클래스 2 출석부</h2>
+        <p>회차를 선택한 후 출석을 체크하세요</p>
+      </div>
+      <div class="att-session-list" id="lc2-sessions"></div>
+      <input class="search-input" placeholder="🔍 이름 검색..." oninput="renderAttendance('lc2',this.value)"/>
+      <div id="lc2-att-list"></div>
+    </div>
+
+    <!-- 세례 신청서 -->
+    <div id="tab-bap-form" style="display:none;">
+      <div class="form-header" style="background:linear-gradient(135deg,#5a2e00,var(--brown));">
+        <h2>✝️ 세례 신청서</h2>
+        <p>2026.7.5(일) 11시 주일예배 | LC2 수료자만 신청 가능</p>
+      </div>
+      <div class="free-badge">✅ 별도 비용 없음</div>
+      <div id="bap-form-fields"></div>
+      <button class="submit-btn" style="background:var(--brown);color:white;" id="bap-submit" onclick="submitForm('bap')">신청서 제출하기</button>
+      <div class="section-label" style="margin-top:24px;">📝 제출된 신청자 목록 <span class="count-chip" id="bap-count">0</span></div>
+      <input class="search-input" placeholder="🔍 이름 검색..." oninput="renderList('bap',this.value)"/>
+      <div id="bap-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, doc, onSnapshot, addDoc, deleteDoc, updateDoc, serverTimestamp, query, orderBy }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// ── Firebase 설정 ──
+const firebaseConfig = {
+  apiKey: "AIzaSyB-vJOlz8PNgPEYhtwYxqIBtN-WKYkFCQQ",
+  authDomain: "allnations-church.firebaseapp.com",
+  projectId: "allnations-church",
+  storageBucket: "allnations-church.firebasestorage.app",
+  messagingSenderId: "760584908969",
+  appId: "1:760584908969:web:65b5c5d0ea54dea03c39b8"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ── 상수 ──
+const NETS = [
+  '강민호네트','고정희네트','김영철네트','김정여네트','김태영네트',
+  '김한수네트','김현숙네트','김혜경네트','박성원네트','박혜경네트',
+  '백기철네트','오상용네트','안주영네트','양규식네트','양선아네트',
+  '양현아네트','유재원네트','이맑음네트','이성탄네트','이수진네트',
+  '이영근네트','이정화네트','장성수네트','현소라네트','현희순네트'
+];
+const SESSIONS = {
+  lc1: ['5/16(토) 제1과','5/23(토) 제2과','5/30(토) 제3과','6/6(토) 제4과'],
+  enc: ['6/19(금) 1일차','6/20(토) 2일차','6/21(일) 3일차'],
+  lc2: ['6/20(토) 제6과','6/27(토) 제7과'],
+};
+const COLORS = {
+  lc1: {chip:'chip-navy', check:'chk-navy', sel:'sel-navy'},
+  enc: {chip:'chip-gold',  check:'chk-gold',  sel:'sel-gold'},
+  lc2: {chip:'chip-green', check:'chk-green', sel:'sel-green'},
+};
+const AVATARBGS = ['#D6E4F7','#FFF3CD','#D5F5E3','#FAD7A0','#F4C0D1','#B5D4F4','#EEEDFE','#C0E8D5'];
+const AVATARFGS = ['#1B3A6B','#7D6608','#1A5E2A','#7B3F00','#993556','#185FA5','#3C3489','#0F6E56'];
+const SCHEDULE = [
+  {cat:'라이프클래스 1', date:'5/16(토)', title:'제1과 실수로부터 배우기', color:'#2E5FA3'},
+  {cat:'라이프클래스 1', date:'5/23(토)', title:'제2과 당신 인생의 최고의 거래', color:'#2E5FA3'},
+  {cat:'라이프클래스 1', date:'5/30(토)', title:'제3과 당신 인생의 최고의 경험', color:'#2E5FA3'},
+  {cat:'라이프클래스 1', date:'6/6(토)',  title:'제4과 삶은 영적전쟁이다', color:'#2E5FA3'},
+  {cat:'엔카운터',       date:'6/19~6/21', title:'엔카운터 (2박 3일)', color:'#C9A84C'},
+  {cat:'라이프클래스 2', date:'6/20(토)', title:'제6과 당신의 결정이 곧 당신을 결정짓는다', color:'#27AE60'},
+  {cat:'라이프클래스 2', date:'6/27(토)', title:'제7과 새로운 시작', color:'#27AE60'},
+  {cat:'세례식',         date:'7/5(일) 11시', title:'주일예배 세례식', color:'#7B3F00'},
+];
+
+// ── 로컬 캐시 ──
+let cache = { lc1:[], enc:[], lc2:[], bap:[] };
+let attendance = { lc1:{}, enc:{}, lc2:{} };
+let currentSession = { lc1:0, enc:0, lc2:0 };
+const selectedTypes = {};
+
+// ── 유틸 ──
+function getInitials(n) { return n ? n.slice(0,2) : '?'; }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function showTab(id, btn) {
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display='none');
+  document.getElementById('tab-'+id).style.display='block';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderAll();
+}
+window.showTab = showTab;
+
+// ── 일정 렌더 ──
+function buildSchedule() {
+  document.getElementById('schedule-list').innerHTML = SCHEDULE.map(s => `
+    <div class="schedule-item">
+      <div class="sched-dot" style="background:${s.color};"></div>
+      <div class="sched-date">${s.date}</div>
+      <div class="sched-content">
+        <div class="sched-title">${s.title}</div>
+        <div class="sched-cat">${s.cat}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── 폼 필드 빌드 ──
+function buildFormFields(containerId, type) {
+  const isBap = type === 'bap';
+  const hasFee = type === 'lc1' || type === 'enc';
+  const netOptions = NETS.map(n => `<option value="${n}">${n}</option>`).join('');
+  document.getElementById(containerId).innerHTML = `
+    <div class="form-group">
+      <label class="form-label">이름 <span>*</span></label>
+      <input class="form-input" id="${type}-name" type="text" placeholder="이름을 입력하세요"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">나이 <span>*</span></label>
+      <input class="form-input" id="${type}-age" type="number" placeholder="나이 (숫자)" min="1" max="99"/>
+    </div>
+    ${isBap ? `
+    <div class="form-group">
+      <label class="form-label">생년월일 <span>*</span></label>
+      <input class="form-input" id="${type}-birth" type="text" placeholder="예: 1990-01-15"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">연락처 <span>*</span></label>
+      <input class="form-input" id="${type}-phone" type="tel" placeholder="010-0000-0000"/>
+    </div>` : `
+    <div class="form-group">
+      <label class="form-label">구분 <span>*</span></label>
+      <div class="gender-group">
+        <button class="gender-btn" id="${type}-adult" onclick="selectType('${type}','adult')">성인</button>
+        <button class="gender-btn" id="${type}-youth" onclick="selectType('${type}','youth')">유스</button>
+      </div>
+    </div>`}
+    <div class="form-group">
+      <label class="form-label">소속 네트 <span>*</span></label>
+      <select class="form-select" id="${type}-net">
+        <option value="">-- 네트 선택 --</option>
+        ${netOptions}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">소속 셀 <span>*</span></label>
+      <input class="form-input" id="${type}-cell" type="text" placeholder="소속 셀명"/>
+    </div>
+    ${!isBap ? `
+    <div class="form-group">
+      <label class="form-label">가이드 이름 <span>*</span></label>
+      <input class="form-input" id="${type}-guide" type="text" placeholder="담당 가이드 이름"/>
+    </div>
+    ${hasFee ? `
+    <div class="form-group">
+      <label class="form-label">등록비 납부</label>
+      <select class="form-select" id="${type}-fee">
+        <option value="미납">미납</option>
+        <option value="납부완료">납부완료</option>
+      </select>
+    </div>` : ''}` : ''}`;
+}
+
+window.selectType = function(type, val) {
+  selectedTypes[type] = val;
+  const selClass = COLORS[type]?.sel || 'sel-navy';
+  ['adult','youth'].forEach(v => {
+    const btn = document.getElementById(`${type}-${v}`);
+    if (btn) { btn.classList.remove('sel-navy','sel-gold','sel-green'); if (v===val) btn.classList.add(selClass); }
+  });
+};
+
+// ── 폼 데이터 수집 ──
+function getFormData(type) {
+  const isBap = type === 'bap';
+  const name = document.getElementById(`${type}-name`)?.value.trim();
+  const age  = document.getElementById(`${type}-age`)?.value.trim();
+  const net  = document.getElementById(`${type}-net`)?.value;
+  const cell = document.getElementById(`${type}-cell`)?.value.trim();
+  if (!name || !age || !net || !cell) { showToast('⚠️ 필수 항목을 모두 입력해주세요'); return null; }
+  if (isBap) {
+    const birth = document.getElementById(`${type}-birth`)?.value.trim();
+    const phone = document.getElementById(`${type}-phone`)?.value.trim();
+    if (!birth || !phone) { showToast('⚠️ 필수 항목을 모두 입력해주세요'); return null; }
+    return { name, age: Number(age), birth, phone, net, cell, createdAt: serverTimestamp() };
+  }
+  const guide = document.getElementById(`${type}-guide`)?.value.trim();
+  if (!guide) { showToast('⚠️ 가이드 이름을 입력해주세요'); return null; }
+  const personType = selectedTypes[type] || '성인';
+  const fee = document.getElementById(`${type}-fee`)?.value || '미납';
+  return { name, age: Number(age), personType, net, cell, guide, fee, createdAt: serverTimestamp() };
+}
+
+function clearForm(type) {
+  const isBap = type === 'bap';
+  ['name','age','cell'].forEach(f => { const el = document.getElementById(`${type}-${f}`); if(el) el.value=''; });
+  const netEl = document.getElementById(`${type}-net`); if(netEl) netEl.value='';
+  if (isBap) { ['birth','phone'].forEach(f => { const el = document.getElementById(`${type}-${f}`); if(el) el.value=''; }); }
+  else {
+    const g = document.getElementById(`${type}-guide`); if(g) g.value='';
+    const f = document.getElementById(`${type}-fee`); if(f) f.value='미납';
+    selectedTypes[type] = null;
+    ['adult','youth'].forEach(v => { const b = document.getElementById(`${type}-${v}`); if(b) b.classList.remove('sel-navy','sel-gold','sel-green'); });
+  }
+}
+
+// ── Firebase CRUD ──
+window.submitForm = async function(type) {
+  const data = getFormData(type); if (!data) return;
+  const btn = document.getElementById(`${type}-submit`);
+  btn.disabled = true; btn.textContent = '저장 중...';
+  try {
+    await addDoc(collection(db, `lifeclass2026_${type}`), data);
+    clearForm(type);
+    showToast('✅ 신청서가 저장되었습니다!');
+  } catch(e) {
+    showToast('❌ 저장 실패: ' + e.message);
+  }
+  btn.disabled = false;
+  btn.textContent = '신청서 제출하기';
+};
+
+window.deleteEntry = async function(type, id) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  try {
+    await deleteDoc(doc(db, `lifeclass2026_${type}`, id));
+    showToast('🗑️ 삭제되었습니다');
+  } catch(e) { showToast('❌ 삭제 실패'); }
+};
+
+window.toggleAttendance = async function(type, docId, sessionIdx) {
+  const key = `s${sessionIdx}`;
+  const person = cache[type].find(p => p.id === docId);
+  if (!person) return;
+  const currentVal = person.att?.[key] || false;
+  try {
+    await updateDoc(doc(db, `lifeclass2026_${type}`, docId), { [`att.${key}`]: !currentVal });
+  } catch(e) { showToast('❌ 출석 업데이트 실패'); }
+};
+
+// ── 목록 렌더 ──
+function renderList(type, search='') {
+  const el = document.getElementById(`${type}-list`); if (!el) return;
+  const isBap = type === 'bap';
+  let data = cache[type];
+  if (search) { const s = search.toLowerCase(); data = data.filter(p => p.name?.includes(s) || p.net?.includes(s)); }
+  const countEl = document.getElementById(`${type}-count`);
+  if (countEl) countEl.textContent = cache[type].length;
+  if (!data.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">${search?'🔍':'📝'}</div><p>${search?'검색 결과가 없습니다':'신청자가 없습니다'}</p></div>`; return;
+  }
+  el.innerHTML = data.map((p, i) => {
+    const bg = AVATARBGS[i % AVATARBGS.length], fg = AVATARFGS[i % AVATARFGS.length];
+    const feeBadge = (!isBap && (type==='lc1'||type==='enc')) ? `<span class="badge ${p.fee==='납부완료'?'badge-fee-ok':'badge-fee-no'}">${p.fee||'미납'}</span> ` : '';
+    const typeBadge = !isBap ? `<span class="badge ${p.personType==='유스'?'badge-youth':'badge-adult'}">${p.personType||'성인'}</span> ` : '';
+    const sub = isBap ? `${p.net} | ${p.cell} | ☎ ${p.phone}` : `${p.net} | ${p.cell} | 가이드: ${p.guide}`;
+    return `<div class="att-person">
+      <div class="att-avatar" style="background:${bg};color:${fg};">${getInitials(p.name)}</div>
+      <div class="att-info">
+        <div class="att-name">${p.name} <span style="font-size:14px;color:#aaa;">${p.age}세</span> ${typeBadge}${feeBadge}</div>
+        <div class="att-meta">${sub}</div>
+        ${p.birth?`<div class="att-meta">생년월일: ${p.birth}</div>`:''}
+      </div>
+      <button class="del-btn" onclick="deleteEntry('${type}','${p.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ── 출석부 렌더 ──
+function buildSessionTabs(type) {
+  const container = document.getElementById(`${type}-sessions`); if (!container) return;
+  container.innerHTML = SESSIONS[type].map((s, i) => `
+    <button class="sess-chip ${i===currentSession[type]?COLORS[type].chip:''}"
+      onclick="selectSession('${type}',${i})">${s}</button>`).join('');
+}
+window.selectSession = function(type, idx) {
+  currentSession[type] = idx; buildSessionTabs(type); renderAttendance(type);
+};
+
+function isCompleted(type, person) {
+  return SESSIONS[type].every((_, i) => person.att?.[`s${i}`]);
+}
+
+function renderAttendance(type, search='') {
+  const el = document.getElementById(`${type}-att-list`); if (!el) return;
+  const idx = currentSession[type];
+  let people = cache[type];
+  if (search) { const s = search.toLowerCase(); people = people.filter(p => p.name?.includes(s)); }
+  if (!people.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">${search?'🔍':'👥'}</div><p>${search?'검색 결과 없음':'신청자가 없습니다<br>먼저 신청서를 제출해주세요'}</p></div>`; return;
+  }
+  el.innerHTML = people.map((p, i) => {
+    const checked = !!p.att?.[`s${idx}`];
+    const done = isCompleted(type, p);
+    const bg = AVATARBGS[i % AVATARBGS.length], fg = AVATARFGS[i % AVATARFGS.length];
+    return `<div class="att-person">
+      <div class="att-avatar" style="background:${bg};color:${fg};">${getInitials(p.name)}</div>
+      <div class="att-info">
+        <div class="att-name">${p.name} <span style="font-size:14px;color:#aaa;">${p.age}세</span></div>
+        <div class="att-meta">${p.net} | ${p.cell} <span class="badge ${done?'badge-done':'badge-no'}" style="margin-left:4px;">${done?'✅ 수료':'미수료'}</span></div>
+      </div>
+      <button class="att-check ${checked?COLORS[type].check:''}"
+        onclick="toggleAttendance('${type}','${p.id}',${idx})">${checked?'✓':''}</button>
+    </div>`;
+  }).join('');
+}
+
+function updateStats() {
+  ['lc1','enc','lc2','bap'].forEach(t => {
+    const el = document.getElementById(`stat-${t}`);
+    if (el) el.textContent = cache[t].length;
+  });
+}
+
+function renderAll() {
+  ['lc1','enc','lc2','bap'].forEach(t => renderList(t));
+  ['lc1','enc','lc2'].forEach(t => { buildSessionTabs(t); renderAttendance(t); });
+  updateStats();
+}
+
+// ── CSV 내보내기 ──
+window.exportCSV = function() {
+  const labels = { lc1:'LC1', enc:'엔카운터', lc2:'LC2', bap:'세례' };
+  let csv = '\uFEFF';
+  ['lc1','enc','lc2','bap'].forEach(type => {
+    if (!cache[type].length) return;
+    csv += `\n[${labels[type]} 신청자]\n`;
+    if (type==='bap') {
+      csv += '이름,나이,생년월일,연락처,소속네트,소속셀\n';
+      cache[type].forEach(p => { csv += `${p.name},${p.age},${p.birth||''},${p.phone||''},${p.net},${p.cell}\n`; });
+    } else {
+      csv += '이름,나이,구분,소속네트,소속셀,가이드,등록비\n';
+      cache[type].forEach(p => { csv += `${p.name},${p.age},${p.personType||'성인'},${p.net},${p.cell},${p.guide||''},${p.fee||''}\n`; });
+    }
+  });
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = '라이프클래스2026_명단.csv'; a.click();
+  showToast('📥 CSV 파일이 저장되었습니다');
+};
+
+// ── Firebase 실시간 리스너 ──
+function setupListeners() {
+  ['lc1','enc','lc2','bap'].forEach(type => {
+    const q = query(collection(db, `lifeclass2026_${type}`), orderBy('createdAt','asc'));
+    onSnapshot(q, snapshot => {
+      cache[type] = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      setConnStatus(true);
+      renderList(type);
+      if (['lc1','enc','lc2'].includes(type)) renderAttendance(type);
+      updateStats();
+    }, err => {
+      console.error('Firestore error:', err.code, err.message);
+      // index 없을 때는 orderBy 없이 재시도
+      if (err.code === 'failed-precondition' || err.code === 'unimplemented') {
+        const q2 = collection(db, `lifeclass2026_${type}`);
+        onSnapshot(q2, snapshot => {
+          cache[type] = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          setConnStatus(true);
+          renderList(type);
+          if (['lc1','enc','lc2'].includes(type)) renderAttendance(type);
+          updateStats();
+        });
+      } else {
+        setConnStatus(false);
+      }
+    });
+  });
+}
+
+function setConnStatus(online) {
+  const bar = document.getElementById('conn-bar');
+  const txt = document.getElementById('conn-text');
+  bar.className = 'conn-bar ' + (online?'online':'offline');
+  txt.textContent = online ? 'Firebase 실시간 연결됨' : '연결 끊김 — 재연결 중...';
+}
+
+// ── 초기화 ──
+async function init() {
+  buildSchedule();
+  ['lc1','enc','lc2','bap'].forEach(t => buildFormFields(`${t}-form-fields`, t));
+  setupListeners();
+  setTimeout(() => {
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('main-app').style.display = 'flex';
+    document.getElementById('main-app').style.flexDirection = 'column';
+  }, 800);
+}
+
+init();
+</script>
+</body>
+</html>
